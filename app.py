@@ -6,6 +6,7 @@ import os
 import re
 import hashlib
 from pathlib import Path
+from io import BytesIO
 from dotenv import load_dotenv
 
 # =========================================================
@@ -31,6 +32,7 @@ st.set_page_config(
 
 st.markdown("""
 <style>
+
 .stApp {
     background:
         radial-gradient(circle at 10% 10%, rgba(32,183,125,.10), transparent 25%),
@@ -106,8 +108,8 @@ st.markdown("""
 
 .tag {
     display: inline-block;
-    padding: 5px 10px;
-    margin: 3px;
+    padding: 7px 12px;
+    margin: 4px;
     border-radius: 20px;
     background: #123d30;
     border: 1px solid #1f8f68;
@@ -150,16 +152,50 @@ st.markdown("""
     border-radius: 17px;
     background: linear-gradient(135deg,#0b3024,#09231b);
     border: 1px solid #176b50;
-    min-height: 150px;
+    min-height: 145px;
+    margin-bottom: 12px;
 }
+
+.feature h2 {
+    margin-bottom: 5px;
+}
+
+.success-feature {
+    color: #54f0aa;
+    font-weight: bold;
+}
+
+.not-feature {
+    color: #ff9b9b;
+    font-weight: bold;
+}
+
+.pdf-box {
+    padding: 20px;
+    border-radius: 18px;
+    background: linear-gradient(135deg,#103b2d,#09251d);
+    border: 1px solid #39e6a0;
+    margin: 18px 0;
+}
+
+.module-header {
+    padding: 18px;
+    border-radius: 16px;
+    background: #0a281f;
+    border: 1px solid #176b50;
+    margin-bottom: 20px;
+}
+
 </style>
 """, unsafe_allow_html=True)
+
 
 # =========================================================
 # KNOWLEDGE BASE
 # =========================================================
 
 LEGAL_KNOWLEDGE = [
+
     {
         "topic": "Unpaid Salary / Wages",
         "keywords": [
@@ -182,11 +218,12 @@ LEGAL_KNOWLEDGE = [
         ],
         "route": [
             "Relevant labour/employment authority",
-            "Employer's HR or grievance channel",
+            "Employer HR or grievance channel",
             "Qualified employment/labour lawyer",
             "Legal-aid organization where eligible"
         ]
     },
+
     {
         "topic": "Employment Contract",
         "keywords": [
@@ -213,6 +250,7 @@ LEGAL_KNOWLEDGE = [
             "Legal-aid organization where eligible"
         ]
     },
+
     {
         "topic": "Property / Land Dispute",
         "keywords": [
@@ -241,6 +279,7 @@ LEGAL_KNOWLEDGE = [
             "Legal-aid organization where eligible"
         ]
     },
+
     {
         "topic": "Inheritance / Succession",
         "keywords": [
@@ -268,6 +307,7 @@ LEGAL_KNOWLEDGE = [
             "Legal-aid organization where eligible"
         ]
     },
+
     {
         "topic": "Online Harassment / Cyber Complaint",
         "keywords": [
@@ -295,6 +335,7 @@ LEGAL_KNOWLEDGE = [
             "Legal-aid organization where eligible"
         ]
     },
+
     {
         "topic": "Police / Criminal Complaint",
         "keywords": [
@@ -322,6 +363,7 @@ LEGAL_KNOWLEDGE = [
             "Legal-aid organization where eligible"
         ]
     },
+
     {
         "topic": "Consumer Complaint",
         "keywords": [
@@ -351,6 +393,11 @@ LEGAL_KNOWLEDGE = [
     }
 ]
 
+
+# =========================================================
+# LANGUAGES / CITIES
+# =========================================================
+
 LANGUAGES = [
     "English",
     "Urdu",
@@ -374,6 +421,7 @@ CITIES = [
     "Other"
 ]
 
+
 # =========================================================
 # HELPERS
 # =========================================================
@@ -387,15 +435,18 @@ def normalize(text):
 
 
 def search_legal_knowledge(query):
+
     text = normalize(query)
     words = set(text.split())
     matches = []
 
     for item in LEGAL_KNOWLEDGE:
+
         score = 0
         matched = set()
 
         for kw in item["keywords"]:
+
             nkw = normalize(kw)
 
             if not nkw:
@@ -413,6 +464,7 @@ def search_legal_knowledge(query):
                 matched.add(kw)
 
         if score:
+
             matches.append({
                 "score": score,
                 "matched_words": matched,
@@ -428,8 +480,13 @@ def search_legal_knowledge(query):
 
 
 def get_best_topic(query):
+
     matches = search_legal_knowledge(query)
-    return matches[0]["data"] if matches else None
+
+    if matches:
+        return matches[0]["data"]
+
+    return None
 
 
 # =========================================================
@@ -437,13 +494,17 @@ def get_best_topic(query):
 # =========================================================
 
 def load_history():
+
     try:
+
         if HISTORY_FILE.exists():
+
             with open(
                 HISTORY_FILE,
                 "r",
                 encoding="utf-8"
             ) as f:
+
                 data = json.load(f)
 
                 return data if isinstance(data, list) else []
@@ -461,6 +522,7 @@ def save_history(
     answer,
     language=""
 ):
+
     history = load_history()
 
     history.insert(
@@ -480,11 +542,13 @@ def save_history(
     history = history[:50]
 
     try:
+
         with open(
             HISTORY_FILE,
             "w",
             encoding="utf-8"
         ) as f:
+
             json.dump(
                 history,
                 f,
@@ -497,12 +561,15 @@ def save_history(
 
 
 def clear_history():
+
     try:
+
         with open(
             HISTORY_FILE,
             "w",
             encoding="utf-8"
         ) as f:
+
             json.dump([], f)
 
     except Exception:
@@ -510,18 +577,25 @@ def clear_history():
 
 
 def show_history(limit=8):
+
     history = load_history()
 
     if not history:
-        st.info("🕘 No saved history yet.")
+
+        st.info(
+            "🕘 No saved history yet."
+        )
+
         return
 
     for item in history[:limit]:
+
         with st.expander(
             f"{item.get('time', '')} • "
             f"{item.get('module', '')} • "
             f"{item.get('topic', '')}"
         ):
+
             st.write(
                 "**Query:**",
                 item.get("query", "")
@@ -533,17 +607,20 @@ def show_history(limit=8):
             )
 
             if item.get("language"):
+
                 st.caption(
                     f"Language: {item['language']}"
                 )
 
 
 # =========================================================
-# GROQ
+# GROQ API
 # =========================================================
 
 def read_env_key():
+
     try:
+
         key = os.getenv(
             "GROQ_API_KEY",
             ""
@@ -553,12 +630,15 @@ def read_env_key():
             return key
 
         if ENV_FILE.exists():
+
             with open(
                 ENV_FILE,
                 "r",
                 encoding="utf-8"
             ) as f:
+
                 for line in f:
+
                     line = line.strip()
 
                     if (
@@ -566,6 +646,7 @@ def read_env_key():
                         and not line.startswith("#")
                         and line.startswith("GROQ_API_KEY=")
                     ):
+
                         return (
                             line.split("=", 1)[1]
                             .strip()
@@ -581,24 +662,29 @@ def read_env_key():
 
 api_key = read_env_key()
 
+
 # =========================================================
-# VOICE INPUT
+# VOICE INPUT — GROQ WHISPER
 # =========================================================
 
 def transcribe_voice(
     audio_file,
     language="English"
 ):
+
     if not audio_file:
+
         return ""
 
     if not api_key:
+
         return (
             "VOICE_ERROR: "
             "Groq API key is not configured."
         )
 
     try:
+
         from groq import Groq
 
         client = Groq(
@@ -632,9 +718,12 @@ def transcribe_voice(
             "response_format": "text"
         }
 
-        whisper_language = language_map.get(language)
+        whisper_language = language_map.get(
+            language
+        )
 
         if whisper_language:
+
             args["language"] = whisper_language
 
         result = client.audio.transcriptions.create(
@@ -642,11 +731,13 @@ def transcribe_voice(
         )
 
         if hasattr(result, "text"):
+
             return result.text.strip()
 
         return str(result).strip()
 
     except Exception as e:
+
         return f"VOICE_ERROR: {str(e)}"
 
 
@@ -655,12 +746,14 @@ def voice_to_text(
     language,
     key
 ):
+
     audio = st.audio_input(
         label,
         key=key
     )
 
     if not audio:
+
         return "", False
 
     audio_hash = hashlib.sha256(
@@ -677,22 +770,28 @@ def voice_to_text(
         with st.spinner(
             "🎧 Converting voice to text..."
         ):
+
             result = transcribe_voice(
                 audio,
                 language
             )
 
         if result.startswith("VOICE_ERROR:"):
+
             st.session_state[text_key] = ""
+
             st.error(result)
+
             return "", True
 
         st.session_state[text_key] = result
 
         if result:
+
             st.success(
                 "🎤 Voice converted to text!"
             )
+
             st.caption(
                 f"Transcription: {result}"
             )
@@ -709,7 +808,7 @@ def voice_to_text(
 
 
 # =========================================================
-# PDF GENERATOR
+# PDF GENERATOR — STREAMLIT CLOUD SAFE
 # =========================================================
 
 def create_pdf(
@@ -718,7 +817,9 @@ def create_pdf(
     topic="",
     language="English"
 ):
+
     try:
+
         from reportlab.lib.pagesizes import A4
         from reportlab.platypus import (
             SimpleDocTemplate,
@@ -732,10 +833,10 @@ def create_pdf(
         from reportlab.lib.enums import TA_CENTER
         from reportlab.lib.units import mm
 
-        output_path = BASE_DIR / "insaf_gpt_output.pdf"
+        buffer = BytesIO()
 
         doc = SimpleDocTemplate(
-            str(output_path),
+            buffer,
             pagesize=A4,
             rightMargin=18 * mm,
             leftMargin=18 * mm,
@@ -747,9 +848,15 @@ def create_pdf(
 
         title_style = styles["Title"]
         title_style.alignment = TA_CENTER
+        title_style.fontSize = 22
+
+        heading_style = styles["Heading2"]
+        heading_style.spaceBefore = 10
+        heading_style.spaceAfter = 8
 
         normal = styles["BodyText"]
         normal.leading = 15
+        normal.fontSize = 10
 
         story = []
 
@@ -761,19 +868,23 @@ def create_pdf(
         )
 
         story.append(
+            Spacer(1, 8)
+        )
+
+        story.append(
             Paragraph(
-                title,
-                styles["Heading2"]
+                str(title),
+                heading_style
             )
         )
 
         story.append(
-            Spacer(1, 10)
+            Spacer(1, 8)
         )
 
         meta_data = [
-            ["Topic", topic or "General"],
-            ["Language", language],
+            ["Topic", str(topic or "General")],
+            ["Language", str(language)],
             [
                 "Generated",
                 datetime.now().strftime(
@@ -784,7 +895,10 @@ def create_pdf(
 
         table = Table(
             meta_data,
-            colWidths=[35 * mm, 125 * mm]
+            colWidths=[
+                35 * mm,
+                125 * mm
+            ]
         )
 
         table.setStyle(
@@ -807,47 +921,85 @@ def create_pdf(
                     (0, 0),
                     (-1, -1),
                     "TOP"
-                ),
+                )
             ])
         )
 
         story.append(table)
-        story.append(Spacer(1, 15))
 
-        safe_content = str(content)
+        story.append(
+            Spacer(1, 15)
+        )
 
-        paragraphs = safe_content.split("\n")
+        for raw_line in str(content).split("\n"):
 
-        for paragraph in paragraphs:
-            paragraph = paragraph.strip()
+            line = raw_line.strip()
 
-            if paragraph:
-                paragraph = (
-                    paragraph
-                    .replace("&", "&amp;")
-                    .replace("<", "&lt;")
-                    .replace(">", "&gt;")
+            if not line:
+
+                story.append(
+                    Spacer(1, 5)
                 )
+
+                continue
+
+            line = (
+                line
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+            )
+
+            if line.startswith("### "):
 
                 story.append(
                     Paragraph(
-                        paragraph,
+                        line[4:],
+                        heading_style
+                    )
+                )
+
+            elif line.startswith("## "):
+
+                story.append(
+                    Paragraph(
+                        line[3:],
+                        heading_style
+                    )
+                )
+
+            elif line.startswith("# "):
+
+                story.append(
+                    Paragraph(
+                        line[2:],
+                        heading_style
+                    )
+                )
+
+            else:
+
+                story.append(
+                    Paragraph(
+                        line,
                         normal
                     )
                 )
 
-                story.append(
-                    Spacer(1, 6)
-                )
+            story.append(
+                Spacer(1, 5)
+            )
 
         story.append(
             Spacer(1, 15)
         )
 
         disclaimer = (
-            "AI-assisted legal information. "
-            "Review current law, official procedure and "
-            "the document with a qualified professional "
+            "<b>Important:</b> INSAF GPT provides "
+            "AI-assisted legal information and drafts. "
+            "This document does not replace a qualified lawyer. "
+            "Verify current Pakistani law, jurisdiction, "
+            "official procedure and document requirements "
             "before formal legal action."
         )
 
@@ -860,13 +1012,16 @@ def create_pdf(
 
         doc.build(story)
 
-        with open(
-            output_path,
-            "rb"
-        ) as f:
-            return f.read()
+        buffer.seek(0)
+
+        return buffer.getvalue()
 
     except Exception as e:
+
+        st.error(
+            f"❌ PDF generation failed: {str(e)}"
+        )
+
         return None
 
 
@@ -875,6 +1030,7 @@ def create_pdf(
 # =========================================================
 
 AGENTS = {
+
     "Zuban Agent": (
         "You are the multilingual intake agent. "
         "Understand the user's language and legal issue, "
@@ -919,18 +1075,25 @@ AGENTS = {
 }
 
 
+# =========================================================
+# GROQ CHAT
+# =========================================================
+
 def groq_chat(
     api_key_value,
     system_prompt,
     user_prompt
 ):
+
     if not api_key_value:
+
         return (
             "AGENT_ERROR: "
             "Groq API key is not configured."
         )
 
     try:
+
         from groq import Groq
 
         client = Groq(
@@ -962,8 +1125,13 @@ def groq_chat(
         )
 
     except Exception as e:
+
         return f"AGENT_ERROR: {str(e)}"
 
+
+# =========================================================
+# MULTI-AGENT ENGINE
+# =========================================================
 
 def run_multi_agent(
     issue,
@@ -971,6 +1139,7 @@ def run_multi_agent(
     api_key_value,
     include_draft=False
 ):
+
     matches = search_legal_knowledge(issue)
 
     kb = (
@@ -984,6 +1153,7 @@ def run_multi_agent(
     )
 
     if kb:
+
         kb_context = json.dumps(
             {
                 "topic": kb["topic"],
@@ -1012,6 +1182,7 @@ Do not present uncertain information as a verified legal fact.
     selected = dict(AGENTS)
 
     if not include_draft:
+
         selected.pop(
             "Musawwid Agent",
             None
@@ -1038,9 +1209,11 @@ Do not present uncertain information as a verified legal fact.
             name = futures[future]
 
             try:
+
                 results[name] = future.result()
 
             except Exception as e:
+
                 results[name] = (
                     f"AGENT_ERROR: {str(e)}"
                 )
@@ -1129,6 +1302,7 @@ Answer using only supported information.
 # =========================================================
 
 RELATED_IMAGES = {
+
     "Unpaid Salary / Wages":
         "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=600&q=70",
 
@@ -1156,9 +1330,11 @@ def show_related_image(
     topic,
     caption="Related visual"
 ):
+
     url = RELATED_IMAGES.get(topic)
 
     if url:
+
         st.image(
             url,
             caption=f"🖼️ {caption}: {topic}",
@@ -1171,6 +1347,7 @@ def show_related_image(
 # =========================================================
 
 def go_to_page(title):
+
     st.session_state["main_navigation"] = title
 
 
@@ -1178,7 +1355,10 @@ def show_agent_status(
     results=None,
     active=True
 ):
-    st.markdown("### 🤖 Multi-Agent Team")
+
+    st.markdown(
+        "### 🤖 Multi-Agent AI Network"
+    )
 
     names = [
         "Zuban Agent",
@@ -1224,39 +1404,54 @@ def show_agent_status(
             )
 
 
-def show_sources(kb, matches=None):
-    st.markdown("### 📚 Legal RAG / Knowledge Sources")
+def show_sources(
+    kb,
+    matches=None
+):
+
+    st.markdown(
+        "### 📚 Legal Knowledge Retrieval"
+    )
 
     if kb:
+
         st.markdown(
             f"""
             <div class='source-box'>
-                <b>INSAF GPT Local Knowledge Base</b><br>
+                <b>📚 INSAF GPT Local Knowledge Base</b><br>
                 Topic: {kb['topic']}<br>
                 <span class='small-note'>
-                This is a local AI knowledge-base entry, not a
-                substitute for verification against current official law.
+                Knowledge-grounded local retrieval.
+                Verify current official law before formal action.
                 </span>
             </div>
             """,
             unsafe_allow_html=True
         )
 
-        st.write("**Knowledge-base information:**")
-        st.write(kb["information"])
+        st.write(
+            "**Knowledge-base information:**"
+        )
+
+        st.write(
+            kb["information"]
+        )
 
     else:
+
         st.info(
             "No close topic was found in the local knowledge base."
         )
 
     if matches:
+
         matched_topics = [
             item["data"]["topic"]
             for item in matches[:3]
         ]
 
         if matched_topics:
+
             st.caption(
                 "Related knowledge topics: "
                 + " • ".join(matched_topics)
@@ -1264,15 +1459,21 @@ def show_sources(kb, matches=None):
 
 
 def show_evidence_checklist(kb):
+
     if not kb:
         return
 
-    st.markdown("### 📎 Evidence Checklist")
+    st.markdown(
+        "### 📎 Evidence Checklist"
+    )
 
-    for document in kb["documents"]:
+    for index, document in enumerate(
+        kb["documents"]
+    ):
+
         st.checkbox(
             document,
-            key=f"evidence_{normalize(document)}"
+            key=f"evidence_{normalize(document)}_{index}"
         )
 
 
@@ -1280,13 +1481,18 @@ def show_where_to_file(
     kb,
     city
 ):
-    st.markdown("### 🏛️ Where to Seek Help")
+
+    st.markdown(
+        "### 🏛️ General Legal Routing"
+    )
 
     if not kb:
+
         st.info(
             "Describe a more specific legal issue to generate "
             "general routing guidance."
         )
+
         return
 
     st.markdown(
@@ -1300,13 +1506,59 @@ def show_where_to_file(
     )
 
     for route in kb["route"]:
-        st.write("•", route)
+
+        st.write(
+            "•",
+            route
+        )
 
     st.warning(
         "These are general routing categories, not a claim that "
-        "a specific authority must handle your case. Verify the "
-        "current procedure, jurisdiction and contact details directly."
+        "a specific authority must handle your case. Verify current "
+        "procedure, jurisdiction and contact details directly."
     )
+
+
+def show_pdf_download(
+    pdf_data,
+    label,
+    file_name,
+    key
+):
+
+    st.markdown(
+        """
+        <div class='pdf-box'>
+            <h3>📄 PDF Export</h3>
+            <p>
+            Your document is ready to download.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    if pdf_data:
+
+        st.success(
+            "✅ PDF successfully generated!"
+        )
+
+        st.download_button(
+            label=label,
+            data=pdf_data,
+            file_name=file_name,
+            mime="application/pdf",
+            type="primary",
+            key=key
+        )
+
+    else:
+
+        st.error(
+            "❌ PDF could not be generated. "
+            "Check that ReportLab is installed."
+        )
 
 
 def render_result(
@@ -1315,9 +1567,13 @@ def render_result(
     matches=None,
     city=None,
     language="English",
-    pdf_title="INSAF GPT Legal Report"
+    pdf_title="INSAF GPT Legal Report",
+    pdf_key="legal_report"
 ):
-    st.markdown("### 🧠 Orchestrator Agent — Final Response")
+
+    st.markdown(
+        "### 🧠 Orchestrator Agent — Final Response"
+    )
 
     st.markdown(
         f"""
@@ -1328,56 +1584,66 @@ def render_result(
         unsafe_allow_html=True
     )
 
-    if kb:
-        show_related_image(
-            kb["topic"],
-            "Relevant legal topic"
+    if not kb:
+
+        st.info(
+            "The system could not match this issue to a local "
+            "knowledge-base topic."
         )
 
-        show_sources(
+        return
+
+    show_related_image(
+        kb["topic"],
+        "Relevant legal topic"
+    )
+
+    show_sources(
+        kb,
+        matches
+    )
+
+    show_evidence_checklist(
+        kb
+    )
+
+    if city:
+
+        show_where_to_file(
             kb,
-            matches
+            city
         )
 
-        show_evidence_checklist(kb)
-
-        if city:
-            show_where_to_file(
-                kb,
-                city
-            )
-
-        pdf_content = (
-            f"INSAF GPT — AI-Assisted Legal Report\n\n"
-            f"Topic: {kb['topic']}\n"
-            f"Language: {language}\n\n"
-            f"AI Response:\n{final}\n\n"
-            f"Evidence to preserve:\n"
-            + "\n".join(
-                f"- {d}"
-                for d in kb["documents"]
-            )
-            + "\n\nPossible routing:\n"
-            + "\n".join(
-                f"- {r}"
-                for r in kb["route"]
-            )
+    pdf_content = (
+        f"INSAF GPT — AI-Assisted Legal Report\n\n"
+        f"Topic: {kb['topic']}\n"
+        f"Language: {language}\n\n"
+        f"AI Response:\n{final}\n\n"
+        f"Evidence to preserve:\n"
+        + "\n".join(
+            f"- {d}"
+            for d in kb["documents"]
         )
-
-        pdf_data = create_pdf(
-            pdf_title,
-            pdf_content,
-            kb["topic"],
-            language
+        + "\n\nPossible routing:\n"
+        + "\n".join(
+            f"- {r}"
+            for r in kb["route"]
         )
+    )
 
-        if pdf_data:
-            st.download_button(
-                "📥 Download Legal Report as PDF",
-                data=pdf_data,
-                file_name="insaf_gpt_legal_report.pdf",
-                mime="application/pdf"
-            )
+    pdf_data = create_pdf(
+        pdf_title,
+        pdf_content,
+        kb["topic"],
+        language
+    )
+
+    show_pdf_download(
+        pdf_data,
+        "📥 Download Legal Report as PDF",
+        "INSAF_GPT_Legal_Report.pdf",
+        pdf_key
+    )
 
 
 # =========================================================
@@ -1386,7 +1652,9 @@ def render_result(
 
 with st.sidebar:
 
-    st.markdown("## ⚖️ INSAF GPT")
+    st.markdown(
+        "## ⚖️ INSAF GPT"
+    )
 
     st.caption(
         "Pakistan Multi-Agent AI Legal Aid"
@@ -1395,7 +1663,10 @@ with st.sidebar:
     st.divider()
 
     if "main_navigation" not in st.session_state:
-        st.session_state.main_navigation = "🏠 Dashboard"
+
+        st.session_state.main_navigation = (
+            "🏠 Dashboard"
+        )
 
     page = st.radio(
         "Navigation",
@@ -1423,14 +1694,23 @@ with st.sidebar:
     )
 
     if api_key:
-        st.success("🔑 Groq API connected")
+
+        st.success(
+            "🔑 Groq API connected"
+        )
+
         st.caption(
             "🎤 Voice input enabled"
         )
+
     else:
-        st.error("❌ Groq API key not found")
+
+        st.error(
+            "❌ Groq API key not found"
+        )
+
         st.caption(
-            "Check GROQ_API_KEY inside your .env file."
+            "Configure GROQ_API_KEY in Streamlit Secrets."
         )
 
     st.markdown(
@@ -1444,7 +1724,9 @@ with st.sidebar:
 
     st.divider()
 
-    st.markdown("### 🕘 Saved History")
+    st.markdown(
+        "### 🕘 Saved History"
+    )
 
     st.caption(
         f"{len(load_history())} saved request(s)"
@@ -1456,9 +1738,16 @@ with st.sidebar:
         args=("🕘 History",)
     )
 
-    if st.button("🗑️ Clear History"):
+    if st.button(
+        "🗑️ Clear History"
+    ):
+
         clear_history()
-        st.success("History cleared.")
+
+        st.success(
+            "History cleared."
+        )
+
         st.rerun()
 
 
@@ -1487,6 +1776,7 @@ if page == "🏠 Dashboard":
     c1, c2, c3, c4 = st.columns(4)
 
     with c1:
+
         st.markdown(
             f"""
             <div class='metric-card'>
@@ -1498,6 +1788,7 @@ if page == "🏠 Dashboard":
         )
 
     with c2:
+
         st.markdown(
             """
             <div class='metric-card'>
@@ -1509,6 +1800,7 @@ if page == "🏠 Dashboard":
         )
 
     with c3:
+
         st.markdown(
             """
             <div class='metric-card'>
@@ -1520,6 +1812,7 @@ if page == "🏠 Dashboard":
         )
 
     with c4:
+
         st.markdown(
             """
             <div class='metric-card'>
@@ -1530,23 +1823,187 @@ if page == "🏠 Dashboard":
             unsafe_allow_html=True
         )
 
-    st.markdown("### 🚀 INSAF GPT Capabilities")
+    # -----------------------------------------------------
+    # IMPLEMENTED FEATURES
+    # -----------------------------------------------------
+
+    st.markdown(
+        "## ✅ INSAF GPT — Implemented Features"
+    )
+
+    implemented_features = [
+
+        ("🤖", "Multi-Agent AI"),
+        ("🎯", "Orchestrator Agent"),
+        ("📚", "Legal Knowledge Base"),
+        ("🔎", "Knowledge Retrieval"),
+        ("📄", "PDF Reports"),
+        ("📝", "Legal Document Drafting"),
+        ("🎤", "Voice Input"),
+        ("🗣️", "Groq Whisper"),
+        ("🌐", "8 Languages"),
+        ("💬", "Legal Help"),
+        ("⚖️", "Qanoon AI"),
+        ("📄", "Musawwid AI"),
+        ("🤝", "Rabta AI"),
+        ("🔄", "Tarjuman"),
+        ("🏛️", "Amal Action Plan"),
+        ("📎", "Evidence Checklist"),
+        ("📍", "General Legal Routing"),
+        ("🕘", "Local History"),
+        ("📊", "Admin Analytics"),
+        ("🖼️", "Related Legal Images")
+    ]
 
     feature_cols = st.columns(4)
 
-    features = [
-        ("🎤", "Voice Input", "Speak your legal issue"),
-        ("⚖️", "Legal RAG", "Knowledge-grounded answers"),
-        ("📄", "PDF Reports", "Download AI-assisted reports"),
-        ("📎", "Evidence", "Organize useful documents"),
-        ("🏛️", "Routing", "General where-to-seek-help guidance"),
-        ("🌐", "Languages", "8 language options"),
-        ("🤖", "Multi-Agent", "Specialist AI workflow"),
-        ("🕘", "History", "Save recent requests")
+    for i, (icon, name) in enumerate(
+        implemented_features
+    ):
+
+        with feature_cols[i % 4]:
+
+            st.markdown(
+                f"""
+                <div class='feature'>
+                    <h2>{icon}</h2>
+                    <h4>{name}</h4>
+                    <p class='success-feature'>
+                        ● IMPLEMENTED
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+    # -----------------------------------------------------
+    # NOT IMPLEMENTED
+    # -----------------------------------------------------
+
+    st.markdown(
+        "## 🔴 Not Currently Implemented"
+    )
+
+    not_implemented = [
+        (
+            "🚫",
+            "Automatic Complaint Submission"
+        ),
+        (
+            "🚫",
+            "Lawyer Connection / Booking"
+        ),
+        (
+            "🚫",
+            "Official Live Pakistani Law Database"
+        )
     ]
 
-    for i, (icon, title, desc) in enumerate(features):
+    not_cols = st.columns(3)
+
+    for i, (icon, name) in enumerate(
+        not_implemented
+    ):
+
+        with not_cols[i % 3]:
+
+            st.markdown(
+                f"""
+                <div class='feature'>
+                    <h2>{icon}</h2>
+                    <h4>{name}</h4>
+                    <p class='not-feature'>
+                        ● NOT IMPLEMENTED
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+    # -----------------------------------------------------
+    # LANGUAGES
+    # -----------------------------------------------------
+
+    st.markdown(
+        "## 🌐 Supported Languages"
+    )
+
+    language_cols = st.columns(4)
+
+    for i, lang_name in enumerate(
+        LANGUAGES
+    ):
+
+        with language_cols[i % 4]:
+
+            st.markdown(
+                f"""
+                <div class='tag'>
+                    🌐 {lang_name}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+    # -----------------------------------------------------
+    # CAPABILITIES
+    # -----------------------------------------------------
+
+    st.markdown(
+        "### 🚀 Core Capabilities"
+    )
+
+    features = [
+        (
+            "🎤",
+            "Voice Input",
+            "Speak your legal issue"
+        ),
+        (
+            "📚",
+            "Knowledge Retrieval",
+            "Search local legal knowledge"
+        ),
+        (
+            "📄",
+            "PDF Reports",
+            "Download generated reports"
+        ),
+        (
+            "📎",
+            "Evidence",
+            "Organize useful documents"
+        ),
+        (
+            "🏛️",
+            "Routing",
+            "General legal-aid guidance"
+        ),
+        (
+            "🌐",
+            "Languages",
+            "8 language options"
+        ),
+        (
+            "🤖",
+            "Multi-Agent",
+            "Specialist AI workflow"
+        ),
+        (
+            "🕘",
+            "History",
+            "Save recent requests"
+        )
+    ]
+
+    feature_cols = st.columns(4)
+
+    for i, (icon, title, desc) in enumerate(
+        features
+    ):
+
         with feature_cols[i % 4]:
+
             st.markdown(
                 f"""
                 <div class='feature'>
@@ -1558,26 +2015,70 @@ if page == "🏠 Dashboard":
                 unsafe_allow_html=True
             )
 
-    st.markdown("### 🤖 Multi-Agent Architecture")
+    # -----------------------------------------------------
+    # AGENTS
+    # -----------------------------------------------------
 
-    show_agent_status(active=True)
+    show_agent_status(
+        active=True
+    )
 
-    st.markdown("### 🚀 Open Modules")
+    # -----------------------------------------------------
+    # MODULES
+    # -----------------------------------------------------
+
+    st.markdown(
+        "### 🚀 Open Modules"
+    )
 
     module_cards = [
-        ("🌐 Zuban AI", "Multilingual legal intake"),
-        ("💬 Legal Help", "Describe your legal problem"),
-        ("⚖️ Qanoon AI", "Knowledge-grounded legal research"),
-        ("📄 Musawwid AI", "AI-assisted document drafting"),
-        ("🤝 Rabta AI", "Legal-aid routing"),
-        ("🔄 Tarjuman", "Legal translation"),
-        ("🏛️ Amal", "Action planning"),
-        ("📊 Admin Analytics", "System analytics")
+
+        (
+            "🌐 Zuban AI",
+            "Multilingual legal intake"
+        ),
+
+        (
+            "💬 Legal Help",
+            "Describe your legal problem"
+        ),
+
+        (
+            "⚖️ Qanoon AI",
+            "Knowledge-grounded legal research"
+        ),
+
+        (
+            "📄 Musawwid AI",
+            "AI-assisted document drafting"
+        ),
+
+        (
+            "🤝 Rabta AI",
+            "Legal-aid routing"
+        ),
+
+        (
+            "🔄 Tarjuman",
+            "Legal translation"
+        ),
+
+        (
+            "🏛️ Amal",
+            "Action planning"
+        ),
+
+        (
+            "📊 Admin Analytics",
+            "System analytics"
+        )
     ]
 
     cols = st.columns(4)
 
-    for i, (title, desc) in enumerate(module_cards):
+    for i, (title, desc) in enumerate(
+        module_cards
+    ):
 
         with cols[i % 4]:
 
@@ -1598,7 +2099,14 @@ if page == "🏠 Dashboard":
                 args=(title,)
             )
 
-    st.markdown("### 🕘 Recent History")
+    # -----------------------------------------------------
+    # RECENT HISTORY
+    # -----------------------------------------------------
+
+    st.markdown(
+        "### 🕘 Recent History"
+    )
+
     show_history(5)
 
 
@@ -1608,7 +2116,9 @@ if page == "🏠 Dashboard":
 
 elif page == "🌐 Zuban AI":
 
-    st.title("🌐 Zuban AI — Multilingual Intake")
+    st.title(
+        "🌐 Zuban AI — Multilingual Intake"
+    )
 
     st.write(
         "Describe your legal issue in your preferred language."
@@ -1620,10 +2130,6 @@ elif page == "🌐 Zuban AI":
         key="zuban_lang"
     )
 
-    st.caption(
-        f"🎤 Voice input language: {lang}"
-    )
-
     voice_issue, new_voice = voice_to_text(
         "🎤 Record your legal problem",
         lang,
@@ -1631,7 +2137,10 @@ elif page == "🌐 Zuban AI":
     )
 
     if new_voice and voice_issue:
-        st.session_state["zuban_text"] = voice_issue
+
+        st.session_state[
+            "zuban_text"
+        ] = voice_issue
 
     issue = st.text_area(
         "🗣️ Your legal problem",
@@ -1648,11 +2157,13 @@ elif page == "🌐 Zuban AI":
     ):
 
         if not issue.strip():
+
             st.warning(
                 "Please describe your legal problem first."
             )
 
         elif not api_key:
+
             st.error(
                 "Groq API key required."
             )
@@ -1670,9 +2181,12 @@ elif page == "🌐 Zuban AI":
                     include_draft=False
                 )
 
-            show_agent_status(results)
+            show_agent_status(
+                results
+            )
 
             if kb:
+
                 st.success(
                     f"✅ Topic detected: {kb['topic']}"
                 )
@@ -1682,7 +2196,8 @@ elif page == "🌐 Zuban AI":
                 kb,
                 matches,
                 language=lang,
-                pdf_title="INSAF GPT Zuban AI Report"
+                pdf_title="INSAF GPT Zuban AI Report",
+                pdf_key="zuban_pdf"
             )
 
             save_history(
@@ -1700,7 +2215,9 @@ elif page == "🌐 Zuban AI":
 
 elif page == "💬 Legal Help":
 
-    st.title("💬 Legal Help")
+    st.title(
+        "💬 Legal Help"
+    )
 
     st.caption(
         f"🎤 Voice input language: {language}"
@@ -1713,7 +2230,10 @@ elif page == "💬 Legal Help":
     )
 
     if new_voice and voice_issue:
-        st.session_state["legal_help_text"] = voice_issue
+
+        st.session_state[
+            "legal_help_text"
+        ] = voice_issue
 
     issue = st.text_area(
         "📝 Your Legal Issue",
@@ -1737,11 +2257,13 @@ elif page == "💬 Legal Help":
     ):
 
         if not issue.strip():
+
             st.error(
                 "Please describe your legal issue first."
             )
 
         elif not api_key:
+
             st.error(
                 "Groq API key required."
             )
@@ -1759,7 +2281,9 @@ elif page == "💬 Legal Help":
                     include_draft=False
                 )
 
-            show_agent_status(results)
+            show_agent_status(
+                results
+            )
 
             st.success(
                 "✅ Multi-agent analysis completed."
@@ -1771,7 +2295,8 @@ elif page == "💬 Legal Help":
                 matches,
                 city=city,
                 language=language,
-                pdf_title="INSAF GPT Legal Help Report"
+                pdf_title="INSAF GPT Legal Help Report",
+                pdf_key="legal_help_pdf"
             )
 
             save_history(
@@ -1789,7 +2314,9 @@ elif page == "💬 Legal Help":
 
 elif page == "⚖️ Qanoon AI":
 
-    st.title("⚖️ Qanoon AI Agent")
+    st.title(
+        "⚖️ Qanoon AI Agent"
+    )
 
     st.write(
         "Dedicated legal-research agent grounded in "
@@ -1807,7 +2334,10 @@ elif page == "⚖️ Qanoon AI":
     )
 
     if new_voice and voice_query:
-        st.session_state["qanoon_text"] = voice_query
+
+        st.session_state[
+            "qanoon_text"
+        ] = voice_query
 
     query = st.text_area(
         "🔎 What do you want to know?",
@@ -1825,18 +2355,22 @@ elif page == "⚖️ Qanoon AI":
     ):
 
         if not query.strip():
+
             st.error(
                 "Please enter your legal question first."
             )
 
         elif not api_key:
+
             st.error(
                 "Groq API key required."
             )
 
         else:
 
-            matches = search_legal_knowledge(query)
+            matches = search_legal_knowledge(
+                query
+            )
 
             kb = (
                 matches[0]["data"]
@@ -1864,7 +2398,9 @@ elif page == "⚖️ Qanoon AI":
             )
 
             show_agent_status(
-                {"Qanoon Agent": answer}
+                {
+                    "Qanoon Agent": answer
+                }
             )
 
             render_result(
@@ -1872,7 +2408,8 @@ elif page == "⚖️ Qanoon AI":
                 kb,
                 matches,
                 language=language,
-                pdf_title="INSAF GPT Qanoon Report"
+                pdf_title="INSAF GPT Qanoon Report",
+                pdf_key="qanoon_pdf"
             )
 
             save_history(
@@ -1890,7 +2427,9 @@ elif page == "⚖️ Qanoon AI":
 
 elif page == "📄 Musawwid AI":
 
-    st.title("📄 Musawwid AI Agent")
+    st.title(
+        "📄 Musawwid AI Agent"
+    )
 
     st.write(
         "Create an AI-assisted legal document draft "
@@ -1920,7 +2459,10 @@ elif page == "📄 Musawwid AI":
     )
 
     if new_voice and voice_details:
-        st.session_state["musawwid_details"] = voice_details
+
+        st.session_state[
+            "musawwid_details"
+        ] = voice_details
 
     details = st.text_area(
         "📝 Case Details",
@@ -1937,11 +2479,13 @@ elif page == "📄 Musawwid AI":
     ):
 
         if not details.strip():
+
             st.error(
                 "Please enter case details."
             )
 
         elif not api_key:
+
             st.error(
                 "Groq API key required."
             )
@@ -1971,14 +2515,18 @@ Rules:
             )
 
             show_agent_status(
-                {"Musawwid Agent": draft}
+                {
+                    "Musawwid Agent": draft
+                }
             )
 
             st.success(
                 "✅ Draft generated."
             )
 
-            st.markdown("### 📄 AI-Assisted Draft")
+            st.markdown(
+                "### 📄 AI-Assisted Draft"
+            )
 
             st.text_area(
                 "Draft",
@@ -1989,8 +2537,9 @@ Rules:
             st.download_button(
                 "⬇️ Download TXT Draft",
                 data=draft,
-                file_name="insaf_gpt_legal_draft.txt",
-                mime="text/plain"
+                file_name="INSAF_GPT_Legal_Draft.txt",
+                mime="text/plain",
+                key="musawwid_txt"
             )
 
             pdf_data = create_pdf(
@@ -2000,13 +2549,12 @@ Rules:
                 language
             )
 
-            if pdf_data:
-                st.download_button(
-                    "📥 Download PDF Draft",
-                    data=pdf_data,
-                    file_name="insaf_gpt_legal_draft.pdf",
-                    mime="application/pdf"
-                )
+            show_pdf_download(
+                pdf_data,
+                "📥 Download PDF Draft",
+                "INSAF_GPT_Legal_Draft.pdf",
+                "musawwid_pdf"
+            )
 
             st.warning(
                 "⚠️ AI-assisted draft. Review it carefully and "
@@ -2028,7 +2576,9 @@ Rules:
 
 elif page == "🤝 Rabta AI":
 
-    st.title("🤝 Rabta AI Agent")
+    st.title(
+        "🤝 Rabta AI Agent"
+    )
 
     st.write(
         "General legal-aid routing based on your city "
@@ -2063,7 +2613,10 @@ elif page == "🤝 Rabta AI":
     )
 
     if new_voice and voice_issue:
-        st.session_state["rabta_issue"] = voice_issue
+
+        st.session_state[
+            "rabta_issue"
+        ] = voice_issue
 
     issue = st.text_area(
         "📝 Optional issue details",
@@ -2077,6 +2630,7 @@ elif page == "🤝 Rabta AI":
     ):
 
         if not api_key:
+
             st.error(
                 "Groq API key required."
             )
@@ -2112,25 +2666,36 @@ clinic or legal-aid channel may be relevant.
             )
 
             show_agent_status(
-                {"Rabta Agent": answer}
+                {
+                    "Rabta Agent": answer
+                }
             )
 
             st.markdown(
                 f"""
                 <div class='card'>
                     <h3>📍 {city}</h3>
-                    <p>{answer}</p>
+                    <p>{str(answer).replace(chr(10), '<br>')}</p>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
 
-            best = get_best_topic(issue) if issue else None
+            best = (
+                get_best_topic(issue)
+                if issue
+                else None
+            )
 
             if best:
-                show_sources(best)
 
-                show_evidence_checklist(best)
+                show_sources(
+                    best
+                )
+
+                show_evidence_checklist(
+                    best
+                )
 
                 show_where_to_file(
                     best,
@@ -2158,7 +2723,9 @@ clinic or legal-aid channel may be relevant.
 
 elif page == "🔄 Tarjuman":
 
-    st.title("🔄 Tarjuman — Translation Agent")
+    st.title(
+        "🔄 Tarjuman — Translation Agent"
+    )
 
     st.write(
         "Translate legal text while preserving its meaning."
@@ -2175,7 +2742,10 @@ elif page == "🔄 Tarjuman":
     )
 
     if new_voice and voice_source:
-        st.session_state["tarjuman_source"] = voice_source
+
+        st.session_state[
+            "tarjuman_source"
+        ] = voice_source
 
     source = st.text_area(
         "📝 Text to translate",
@@ -2196,11 +2766,13 @@ elif page == "🔄 Tarjuman":
     ):
 
         if not source.strip():
+
             st.error(
                 "Please enter text first."
             )
 
         elif not api_key:
+
             st.error(
                 "Groq API key required."
             )
@@ -2222,7 +2794,9 @@ elif page == "🔄 Tarjuman":
             )
 
             show_agent_status(
-                {"Tarjuman Agent": output}
+                {
+                    "Tarjuman Agent": output
+                }
             )
 
             st.success(
@@ -2238,8 +2812,9 @@ elif page == "🔄 Tarjuman":
             st.download_button(
                 "⬇️ Download Translation",
                 data=output,
-                file_name="insaf_gpt_translation.txt",
-                mime="text/plain"
+                file_name="INSAF_GPT_Translation.txt",
+                mime="text/plain",
+                key="tarjuman_download"
             )
 
             save_history(
@@ -2257,7 +2832,9 @@ elif page == "🔄 Tarjuman":
 
 elif page == "🏛️ Amal":
 
-    st.title("🏛️ Amal — Action Agent")
+    st.title(
+        "🏛️ Amal — Action Agent"
+    )
 
     st.write(
         "Turn a legal issue into an organized action checklist."
@@ -2309,7 +2886,10 @@ elif page == "🏛️ Amal":
     )
 
     if new_voice and voice_details:
-        st.session_state["amal_details"] = voice_details
+
+        st.session_state[
+            "amal_details"
+        ] = voice_details
 
     details = st.text_area(
         "📝 Brief facts",
@@ -2323,6 +2903,7 @@ elif page == "🏛️ Amal":
     ):
 
         if not api_key:
+
             st.error(
                 "Groq API key required."
             )
@@ -2360,10 +2941,13 @@ Do not invent contacts or legal deadlines.
             )
 
             show_agent_status(
-                {"Amal Agent": answer}
+                {
+                    "Amal Agent": answer
+                }
             )
 
             issue_topic_map = {
+
                 "Property / Land":
                     "Property / Land Dispute",
 
@@ -2383,18 +2967,25 @@ Do not invent contacts or legal deadlines.
                     "Inheritance / Succession"
             }
 
-            kb = LEGAL_KNOWLEDGE[
-                next(
-                    i
-                    for i, item in enumerate(LEGAL_KNOWLEDGE)
-                    if item["topic"] == issue_topic_map[issue_type]
-                )
+            target_topic = issue_topic_map[
+                issue_type
             ]
 
-            show_related_image(
-                kb["topic"],
-                "Action-plan topic"
+            kb = next(
+                (
+                    item
+                    for item in LEGAL_KNOWLEDGE
+                    if item["topic"] == target_topic
+                ),
+                None
             )
+
+            if kb:
+
+                show_related_image(
+                    kb["topic"],
+                    "Action-plan topic"
+                )
 
             st.markdown(
                 f"### ⚖️ {issue_type}"
@@ -2409,54 +3000,66 @@ Do not invent contacts or legal deadlines.
                 unsafe_allow_html=True
             )
 
-            st.markdown("### 📎 Evidence Checklist")
+            if kb:
 
-            for item in kb["documents"]:
-                st.checkbox(
-                    item,
-                    key=f"amal_check_{normalize(item)}"
+                st.markdown(
+                    "### 📎 Evidence Checklist"
                 )
 
-            st.markdown("### 🏛️ General Routing")
+                for index, item in enumerate(
+                    kb["documents"]
+                ):
 
-            for route in kb["route"]:
-                st.write("•", route)
+                    st.checkbox(
+                        item,
+                        key=f"amal_check_{index}_{normalize(item)}"
+                    )
+
+                st.markdown(
+                    "### 🏛️ General Routing"
+                )
+
+                for route in kb["route"]:
+
+                    st.write(
+                        "•",
+                        route
+                    )
+
+                pdf_content = (
+                    f"Issue: {issue_type}\n"
+                    f"City: {city}\n\n"
+                    f"Action Plan:\n{answer}\n\n"
+                    f"Evidence:\n"
+                    + "\n".join(
+                        f"- {d}"
+                        for d in kb["documents"]
+                    )
+                    + "\n\nRouting:\n"
+                    + "\n".join(
+                        f"- {r}"
+                        for r in kb["route"]
+                    )
+                )
+
+                pdf_data = create_pdf(
+                    "INSAF GPT — Amal Action Plan",
+                    pdf_content,
+                    kb["topic"],
+                    language
+                )
+
+                show_pdf_download(
+                    pdf_data,
+                    "📥 Download Action Plan PDF",
+                    "INSAF_GPT_Action_Plan.pdf",
+                    "amal_pdf"
+                )
 
             st.warning(
                 "INSAF GPT does not automatically submit complaints. "
                 "Verify official procedure and jurisdiction."
             )
-
-            pdf_content = (
-                f"Issue: {issue_type}\n"
-                f"City: {city}\n\n"
-                f"Action Plan:\n{answer}\n\n"
-                f"Evidence:\n"
-                + "\n".join(
-                    f"- {d}"
-                    for d in kb["documents"]
-                )
-                + "\n\nRouting:\n"
-                + "\n".join(
-                    f"- {r}"
-                    for r in kb["route"]
-                )
-            )
-
-            pdf_data = create_pdf(
-                "INSAF GPT — Amal Action Plan",
-                pdf_content,
-                kb["topic"],
-                language
-            )
-
-            if pdf_data:
-                st.download_button(
-                    "📥 Download Action Plan PDF",
-                    data=pdf_data,
-                    file_name="insaf_gpt_action_plan.pdf",
-                    mime="application/pdf"
-                )
 
             save_history(
                 "Amal",
@@ -2473,7 +3076,9 @@ Do not invent contacts or legal deadlines.
 
 elif page == "📊 Admin Analytics":
 
-    st.title("📊 Admin Analytics")
+    st.title(
+        "📊 Admin Analytics"
+    )
 
     history = load_history()
 
@@ -2498,41 +3103,56 @@ elif page == "📊 Admin Analytics":
     c1, c2, c3, c4 = st.columns(4)
 
     with c1:
+
         st.metric(
             "Total AI Requests",
             len(history)
         )
 
     with c2:
+
         st.metric(
             "Legal Drafts",
             drafts
         )
 
     with c3:
+
         st.metric(
             "Languages Used",
             len(languages_used)
         )
 
     with c4:
+
         st.metric(
             "Agents",
             6
         )
 
-    st.markdown("### 🤖 Agent Network")
+    st.markdown(
+        "### 🤖 Agent Network"
+    )
 
-    show_agent_status(active=True)
+    show_agent_status(
+        active=True
+    )
 
-    st.markdown("### 📈 Module Usage")
+    st.markdown(
+        "### 📈 Module Usage"
+    )
 
     if modules_used:
 
         module_counts = {}
 
         for item in history:
-            module = item.get("module", "Unknown")
+
+            module = item.get(
+                "module",
+                "Unknown"
+            )
+
             module_counts[module] = (
                 module_counts.get(module, 0) + 1
             )
@@ -2542,16 +3162,20 @@ elif page == "📊 Admin Analytics":
             key=lambda x: x[1],
             reverse=True
         ):
+
             st.write(
                 f"**{module}:** {count} request(s)"
             )
 
     else:
+
         st.info(
             "Analytics will appear after users make requests."
         )
 
-    st.markdown("### 🕘 Recent Requests")
+    st.markdown(
+        "### 🕘 Recent Requests"
+    )
 
     show_history(10)
 
@@ -2562,7 +3186,9 @@ elif page == "📊 Admin Analytics":
 
 elif page == "🕘 History":
 
-    st.title("🕘 Saved History")
+    st.title(
+        "🕘 Saved History"
+    )
 
     st.write(
         "Your recent AI requests are stored locally in "
@@ -2585,10 +3211,13 @@ elif page == "🕘 History":
             "🗑️ Delete All Saved History",
             type="secondary"
         ):
+
             clear_history()
+
             st.rerun()
 
     else:
+
         st.info(
             "No history saved yet."
         )
